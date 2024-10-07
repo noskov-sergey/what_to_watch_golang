@@ -32,8 +32,13 @@ func New(usecase Usecase) *router {
 	r.Route("/opinions", func(oR chi.Router) {
 		oR.Get("/{opinionID}", r.getOpinionHandler)
 	})
-	r.Get("/404", r.notFoundHandler)
-	r.Get("/500", r.internalServerErrorHandler)
+
+	r.Get("/404", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, "templates/errors/404.html")
+	})
+	r.Get("/500", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, "templates/errors/500.html")
+	})
 
 	r.Handle("/static/*", http.FileServer(http.Dir("templates/")))
 
