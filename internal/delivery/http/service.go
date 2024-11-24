@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.ru/noskov-sergey/what_to_watch_golang/internal/metrics"
 	"github.ru/noskov-sergey/what_to_watch_golang/internal/model"
 )
 
@@ -16,14 +17,17 @@ type Usecase interface {
 }
 
 type router struct {
+	met *metrics.Metrics
+
 	chi.Router
 	usecase Usecase
 }
 
-func New(usecase Usecase) *router {
+func New(usecase Usecase, met *metrics.Metrics) *router {
 	r := &router{
 		Router:  chi.NewRouter(),
 		usecase: usecase,
+		met:     met,
 	}
 
 	r.Get("/", r.getRandomHandler)
@@ -32,13 +36,8 @@ func New(usecase Usecase) *router {
 	r.Route("/opinions", func(oR chi.Router) {
 		oR.Get("/{opinionID}", r.getOpinionHandler)
 	})
-
-	r.Get("/404", func(w http.ResponseWriter, req *http.Request) {
-		http.ServeFile(w, req, "templates/errors/404.html")
-	})
-	r.Get("/500", func(w http.ResponseWriter, req *http.Request) {
-		http.ServeFile(w, req, "templates/errors/500.html")
-	})
+	r.Get("/404", r.notFoundHandler)
+	r.Get("/500", r.internalServerErrorHandler)
 
 	r.Handle("/static/*", http.FileServer(http.Dir("templates/")))
 
