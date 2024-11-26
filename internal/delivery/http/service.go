@@ -11,7 +11,7 @@ import (
 )
 
 type Usecase interface {
-	Get(ctx context.Context) (*model.Opinion, error)
+	GetRandom(ctx context.Context) (*model.Opinion, error)
 	Create(ctx context.Context, opinion model.Opinion) (int, error)
 	GetById(ctx context.Context, id int) (*model.Opinion, error)
 }
