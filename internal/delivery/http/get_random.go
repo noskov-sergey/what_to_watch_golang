@@ -13,7 +13,7 @@ import (
 func (r *router) getRandomHandler(w http.ResponseWriter, req *http.Request) {
 	var mtr = metrics.Met{Handler: metrics.GetRandomHandler}
 
-	opinion, err := r.usecase.Get(context.Background())
+	opinion, err := r.usecase.GetRandom(context.Background())
 	if err != nil {
 		mtr.Err = err
 		r.met.Add(mtr)
