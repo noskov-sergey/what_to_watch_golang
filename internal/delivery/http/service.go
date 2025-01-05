@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 
 	"github.ru/noskov-sergey/what_to_watch_golang/internal/metrics"
 	"github.ru/noskov-sergey/what_to_watch_golang/internal/model"
@@ -19,15 +20,18 @@ type Usecase interface {
 type router struct {
 	met *metrics.Metrics
 
+	log *zap.Logger
+
 	chi.Router
 	usecase Usecase
 }
 
-func New(usecase Usecase, met *metrics.Metrics) *router {
+func New(usecase Usecase, met *metrics.Metrics, log *zap.Logger) *router {
 	r := &router{
 		Router:  chi.NewRouter(),
 		usecase: usecase,
 		met:     met,
+		log:     log,
 	}
 
 	r.Get("/", r.getRandomHandler)

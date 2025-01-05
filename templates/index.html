@@ -51,7 +51,10 @@
               {{else}} <a href="{{.Source}}">{{.Source}}</a> {{end}}
             </p>
             <p>
-              <a href="opinions/{{.ID}}">Ссылка для друзей</a>
+              <a href="opinions/{{.ID}}" id="myInput">Ссылка для друзей</a>
+              <!--
+              <button onclick="copy()">copy</button>
+              -->
             </p>
           </div>
           <div class="col-12 col-lg-5">
@@ -60,8 +63,10 @@
         </div>
       </section>
     </main>
+
     <footer class="fixed-bottom text-center py-3 bg-light">
       <p class="small">© Что посмотреть</p> 
     </footer>
+    <script type="module" src="./static/pages/index.js"></script>
   </body>
 </html>

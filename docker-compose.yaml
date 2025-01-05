@@ -15,6 +15,12 @@ services:
     depends_on:
       - db
     restart: on-failure
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.logs/json.keys_under_root: true
+      co.elastic.logs/json.overwrite_keys: true
+      co.elastic.logs/json.add_error_key: true
+      co.elastic.logs/json.expand_keys: true
 
 
   db:
@@ -53,3 +59,31 @@ services:
     depends_on:
       - db
     restart: on-failure
+
+  elasticsearch:
+    image: elasticsearch:7.8.1
+    ports:
+      - 9200:9200
+    environment:
+      discovery.type: 'single-node'
+      xpack.security.enabled: 'true'
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+      ES_JAVA_OPTS: '-Xmx2g -Xms2g'
+
+  kibana:
+    image: kibana:7.8.1
+    volumes:
+      - ./kibanaa.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+
+  filebeat:
+    labels:
+      co.elastic.logs/enabled: false
+    user: root
+    image: docker.elastic.co/beats/filebeat:7.14.0
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro

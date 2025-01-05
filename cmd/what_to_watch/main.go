@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"log"
 	"net/http"
 	"os"
 
@@ -11,6 +10,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.elastic.co/ecszap"
+	"go.uber.org/zap"
 
 	http2 "github.ru/noskov-sergey/what_to_watch_golang/internal/delivery/http"
 	"github.ru/noskov-sergey/what_to_watch_golang/internal/metrics"
@@ -19,6 +20,10 @@ import (
 )
 
 func main() {
+	encoderConfig := ecszap.NewDefaultEncoderConfig()
+	core := ecszap.NewCore(encoderConfig, os.Stdout, zap.DebugLevel)
+	logger := zap.New(core, zap.AddCaller())
+
 	cfg := flag.String("c", ".env", "config file path")
 	flag.Parse()
 
@@ -27,12 +32,12 @@ func main() {
 
 	err := godotenv.Load(*cfg)
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Fatal("Error loading .env file")
 	}
 
 	db, err := sql.Open("postgres", os.Getenv("DB_DSN"))
 	if err != nil {
-		log.Fatalf("failed to connect to database: %s", err)
+		logger.Fatal("failed to connect to database: %s", zap.Error(err))
 	}
 	defer db.Close()
 
@@ -40,16 +45,16 @@ func main() {
 
 	m := metrics.NewMetrics(reg)
 
-	service := http2.New(whatUC, m)
+	service := http2.New(whatUC, m, logger)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(os.Getenv("MET_URL"), nil))
-		log.Printf("prometheus is running on %s", os.Getenv("MET_URL"))
+		logger.Info("prometheus is running on %s", zap.String("status", os.Getenv("MET_URL")))
+		logger.Fatal("prometheus fatal", zap.Error(http.ListenAndServe(os.Getenv("MET_URL"), nil)))
 	}()
 
-	log.Printf("server is running on %s", os.Getenv("BASE_URL"))
+	logger.Info("server is running", zap.String("BASE_URL", os.Getenv("BASE_URL")))
 	err = http.ListenAndServe(os.Getenv("BASE_URL"), service)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("server running error", zap.Error(err))
 	}
 }
