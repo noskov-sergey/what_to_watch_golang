@@ -9,3 +9,6 @@ install-deps:
 
 local-migration-up:
 	$(LOCAL_BIN)/goose.exe -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) up -v
+
+rebuild-app:
+	docker-compose up --build app -d
